@@ -1,0 +1,9 @@
+services:
+  cloudbeaver:
+    image: dbeaver/cloudbeaver:latest
+    container_name: dbeaver
+    ports:
+      - "20000:8978"
+    volumes:
+      - ./data:/opt/cloudbeaver/workspace
+      - ./dbs:/dbs

@@ -1,0 +1,23 @@
+services:
+  macos:
+    image: dockurr/macos
+    container_name: macos
+    privileged: true
+    environment:
+      VERSION: "tahoe"
+      DISK_SIZE: "256G"
+      CPU_CORES: "8"
+      RAM_SIZE: "12G"
+    devices:
+      - /dev/kvm
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ./storage:/storage
+    ports:
+      - 8006:8006
+      - 5900:5900/tcp
+      - 5900:5900/udp
+      - 5922:22/tcp
+      - 5922:22/udp
+    stop_grace_period: 2m

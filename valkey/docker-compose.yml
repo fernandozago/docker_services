@@ -1,0 +1,18 @@
+services:
+  valkey:
+    image: valkey/valkey:latest
+    container_name: valkey
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data:/data
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: redis-commander
+    ports:
+      - "21000:8081"
+    environment:
+      - REDIS_HOSTS=local:valkey:6379
+    depends_on:
+      - valkey

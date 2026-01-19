@@ -1,0 +1,11 @@
+# ignore everything
+*
+
+# allow directories (so git can reach level-1 folders)
+!*/
+
+# keep this file
+!.gitignore
+
+# allow only: /<dir>/docker-compose.yml
+!/*/docker-compose.yml

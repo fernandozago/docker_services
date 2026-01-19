@@ -1,0 +1,74 @@
+networks:
+  app-tier:
+    driver: bridge
+
+services:
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    networks:
+      - app-tier
+    ports:
+      # keep 9092 as the external/default port for host/LAN clients
+      - "9092:9092"
+    restart: always
+
+    # persist only Kafka data needed to restore topics + messages
+    volumes:
+      - ./data:/var/lib/kafka/data
+
+    environment:
+      # ----- KRaft single node (broker+controller) -----
+      KAFKA_NODE_ID: 0
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 0@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      CLUSTER_ID: "kRaFtCluster1234567890"
+
+      # ----- Storage -----
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+
+      # ----- Listeners -----
+      # INTERNAL for docker-to-docker (kafka-ui, other containers)
+      # EXTERNAL for host/LAN clients on the default 9092
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9091,EXTERNAL://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9091,EXTERNAL://192.168.2.11:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+
+      # ----- Single-node defaults -----
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui
+    networks:
+      - app-tier
+    depends_on:
+      - kafka
+    ports:
+      - "19000:8080"
+    restart: always
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=kafka-docker
+      # docker container should use INTERNAL listener
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9091
+
+  akhq:
+    image: tchiotludo/akhq:latest
+    container_name: akhq
+    networks:
+    - app-tier
+    ports:
+      - "19001:8080"
+    depends_on:
+      - kafka
+    environment:
+      AKHQ_CONFIGURATION: |
+        akhq:
+          connections:
+            kafka-docker:
+              properties:
+                bootstrap.servers: kafka:9091
