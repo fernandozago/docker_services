@@ -1,0 +1,19 @@
+services:
+  openobserve:
+    image: openobserve/openobserve:latest
+    container_name: otel
+    restart: unless-stopped
+    ports:
+      - "5080:5080"
+    environment:
+      ZO_DATA_DIR: /data
+      ZO_ROOT_USER_EMAIL: root@otel.com
+      ZO_ROOT_USER_PASSWORD: 'rootpw'
+
+      # Global retention (minimum is 3)
+      ZO_COMPACT_DATA_RETENTION_DAYS: "3"
+
+      # Global max query range (24h = 1 day)
+      ZO_DEFAULT_MAX_QUERY_RANGE_DAYS: "1"
+    volumes:
+      - ./data:/data
